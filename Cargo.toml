@@ -1,0 +1,13 @@
+[package]
+name = "maildir-notify-daemon"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+hotwatch = "0.4.6"
+mailparse = "0.13.8"
+notify-rust = "4.5.6"
+
+[features]
