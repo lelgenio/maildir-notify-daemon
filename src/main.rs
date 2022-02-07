@@ -1,3 +1,5 @@
+use std::path::PathBuf;
+
 use hotwatch::blocking::{
     Flow,
     Hotwatch,
@@ -9,35 +11,28 @@ use mailparse::{
 use notify_rust::Notification;
 
 fn main() {
-    let args = std::env::args(); // .collect::<Vec<_>>();
-                                 // let path = args.get(1).expect("No path provided, exiting");
-
     let mut hotwatch =
         Hotwatch::new_with_custom_delay(std::time::Duration::from_secs(0))
             .expect("hotwatch failed to initialize!");
 
-    println!("starting");
-
-    for arg in args {
+    std::env::args().for_each(|arg| {
         hotwatch
             .watch(arg, handle_event)
             .expect("hotwatch failed to initialize!");
-    }
+    });
+
     hotwatch.run();
-    println!("exiting");
 }
 
 fn handle_event(event: hotwatch::Event) -> hotwatch::blocking::Flow {
-    _handle_event(event);
+    if let hotwatch::Event::Create(newfile) = event {
+        _handle_event(newfile)
+    };
+
     Flow::Continue
 }
 
-fn _handle_event(event: hotwatch::Event) {
-    let newfile = match dbg! {event} {
-        hotwatch::Event::Create(newfile) => newfile,
-        _ => return,
-    };
-
+fn _handle_event(newfile: PathBuf) {
     let raw_content = match std::fs::read_to_string(&newfile) {
         Ok(c) => c,
         Err(e) => {
@@ -64,8 +59,6 @@ fn _handle_event(event: hotwatch::Event) {
 
     let headers = mail_content.get_headers();
 
-    eprintln!("getting from field");
-
     let from = match headers.get_first_value("From") {
         Some(f) => f,
         None => {
@@ -73,8 +66,6 @@ fn _handle_event(event: hotwatch::Event) {
             return;
         }
     };
-
-    eprintln!("getting subject field");
 
     let subject = match headers.get_first_value("Subject") {
         Some(sub) => sub,
@@ -87,10 +78,6 @@ fn _handle_event(event: hotwatch::Event) {
             .unwrap_or("")
             .to_string(),
     };
-
-    eprintln!("setting subject field to {}", &subject);
-
-    eprintln!("showing notification");
 
     Notification::new()
         .summary(&format!("From: {}", from))
