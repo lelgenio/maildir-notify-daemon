@@ -16,9 +16,7 @@ fn main() {
             .expect("hotwatch failed to initialize!");
 
     std::env::args().for_each(|arg| {
-        hotwatch
-            .watch(arg, handle_event)
-            .expect("hotwatch failed to initialize!");
+        hotwatch.watch(arg, handle_event).ok();
     });
 
     hotwatch.run();
@@ -33,7 +31,7 @@ fn handle_event(event: hotwatch::Event) -> hotwatch::blocking::Flow {
 }
 
 fn _handle_event(newfile: PathBuf) {
-    let raw_content = match std::fs::read_to_string(&newfile) {
+    let raw_content = match std::fs::read(&newfile) {
         Ok(c) => c,
         Err(e) => {
             eprintln!(
@@ -45,7 +43,7 @@ fn _handle_event(newfile: PathBuf) {
         }
     };
 
-    let mail_content = match mailparse::parse_mail(raw_content.as_bytes()) {
+    let mail_content = match mailparse::parse_mail(&raw_content) {
         Ok(c) => c,
         Err(e) => {
             eprintln!(
@@ -67,17 +65,16 @@ fn _handle_event(newfile: PathBuf) {
         }
     };
 
-    let subject = match headers.get_first_value("Subject") {
-        Some(sub) => sub,
-        None => mail_content
+    let subject = headers.get_first_value("Subject").unwrap_or_else(|| {
+        mail_content
             .get_body()
             .unwrap_or("".to_string())
             .lines()
             .filter(|line| line.len() != 0)
             .next()
             .unwrap_or("")
-            .to_string(),
-    };
+            .to_string()
+    });
 
     Notification::new()
         .summary(&format!("From: {}", from))
