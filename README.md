@@ -9,5 +9,6 @@ maildir-notify-daemon ~/.local/share/mail/*/*/new/
 ## Try it without sending emails
 
 ```sh
-cp ~/.local/share/mail/personal/INBOX/cur/[ANY_MAIL_FILE] ~/.local/share/mail/personal/INBOX/new/
+cd ~/.local/share/mail/personal/INBOX/
+cp cur/[ANY_MAIL_FILE] new/
 ```
