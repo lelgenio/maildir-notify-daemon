@@ -15,9 +15,9 @@ fn main() {
         Hotwatch::new_with_custom_delay(std::time::Duration::from_secs(0))
             .expect("hotwatch failed to initialize!");
 
-    for arg in std::env::args() {
+    for arg in std::env::args().skip(1) {
         if let Err(e) = hotwatch.watch(&arg, handle_event) {
-            eprintln!("Failed to watch arg {} with error: {}", &arg, e);
+            eprintln!("Failed to watch arg '{}': {}", &arg, e);
         }
     }
 
